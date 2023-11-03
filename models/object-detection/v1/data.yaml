@@ -1,0 +1,26 @@
+names:
+ - 'tree'
+ - 'red_light'
+ - 'green_light'
+ - 'crosswalk'
+ - 'tactile_paving'
+ - 'sign'
+ - 'pedestrian'
+ - 'bicycle'
+ - 'bus'
+ - 'truck'
+ - 'car'
+ - 'motorcycle'
+ - 'reflective_cone'
+ - 'ashcan'
+ - 'warning_column'
+ - 'roadblock'
+ - 'pole'
+ - 'dog'
+ - 'tricycle'
+ - 'fire_hydrant'
+
+nc: 20
+test: /Users/muratguc/Projects/SeniorProject/ObjectClassification/datasets/WOTR/test/images
+train: /Users/muratguc/Projects/SeniorProject/ObjectClassification/datasets/WOTR/train/images
+val: /Users/muratguc/Projects/SeniorProject/ObjectClassification/datasets/WOTR/val/images

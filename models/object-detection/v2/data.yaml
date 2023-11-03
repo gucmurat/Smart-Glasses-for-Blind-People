@@ -1,0 +1,13 @@
+train: ../train/images
+val: ../valid/images
+test: ../test/images
+
+nc: 1
+names: ['podotacti']
+
+roboflow:
+  workspace: practica1
+  project: pavimento-discapacidad-gafww
+  version: 1
+  license: CC BY 4.0
+  url: https://universe.roboflow.com/practica1/pavimento-discapacidad-gafww/dataset/1
