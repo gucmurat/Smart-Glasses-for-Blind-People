@@ -3,14 +3,17 @@ import cv2
 import time
 import logging
 
-HOST = '192.168.0.1'
-PORT = 65432
+HOST = 'localhost'
+PORT = 9999
 
 cap = cv2.VideoCapture(1)
 
+logger = logging.getLogger("OpenCV server")
+logger.setLevel(logging.INFO)
+
 with NumpySocket() as s:
-    s.connect(("localhost", 9999))
-    logging.info("connected to the server.")
+    s.connect((HOST, PORT))
+    logger.info("connected to the server.")
     while cap.isOpened():
         ret, frame = cap.read()
         #ref_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -18,7 +21,7 @@ with NumpySocket() as s:
         if ret is True:
             try:
                 s.sendall(frame_resize)
-                logging.info("frame is sent to the server.")
+                logger.info("frame is sent to the server.")
             except Exception:
                 break
         else:

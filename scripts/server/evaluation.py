@@ -68,23 +68,39 @@ def image_captioning_result(image):
         image = Image.fromarray(np.uint8(image)).convert('RGB')
     return model_captioning(image)
 
-initialize_models()
+def stereo_vision_distance_result(image_left, image_right, labels_boxes_json):
+    classes = labels_boxes_json["classes"]
+    boxes = labels_boxes_json["boxes"]
+    # TODO 
+    # returns distances dict for each boxes
+    # example output 
+    # {"classes": result.boxes.cls, "boxes": result.boxes.xyxy, "distances": distances}
+    pass
 
-"""
-cap = cv2.VideoCapture(0) 
+# example usage: get_model_output_from_camera(image_captioning_result, printable=True)
+def get_model_output_from_camera(model_method, show=False, printable=False):
+    cap = cv2.VideoCapture(0) 
+    while True:
+        ret, frame = cap.read()  
+        if not ret:
+            break
 
-while True:
-    ret, frame = cap.read()  
-    if not ret:
-        break
+        result = model_method(frame)
+        if printable:
+            print(result)
+        if show:
+            cv2.imshow("output", result)
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        time.sleep(1)
 
-    result = image_captioning_result(frame)
+    cap.release()
+    cv2.destroyAllWindows()
 
-    if cv2.waitKey(1) & 0xFF == ord('q'):
-        break
-        
-    time.sleep(1)
-
-cap.release()
-cv2.destroyAllWindows()
-"""
+def get_model_output_from_frame(model_method, frame ,show=False, printable=False):
+    result = model_method(frame)
+    if printable:
+        print(result)
+    if show:
+        cv2.imshow("output", result)
+    cv2.destroyAllWindows()
