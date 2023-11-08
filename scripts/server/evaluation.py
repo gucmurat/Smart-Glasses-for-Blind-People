@@ -44,7 +44,7 @@ def initialize_models():
 def detected_labels_and_boxes_result(model, image):
     results = model.predict(image)
     result = results[0]
-    return {"classes": result.boxes.cls, "boxes": result.boxes.xyxy}
+    return {"classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf}
 
 def depth_map_result(image):
     if isinstance(image, str):
@@ -74,7 +74,7 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json):
     # TODO 
     # returns distances dict for each boxes
     # example output 
-    # {"classes": result.boxes.cls, "boxes": result.boxes.xyxy, "distances": distances}
+    # {"classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf, "distances": distances}
     pass
 
 # example usage: get_model_output_from_camera(image_captioning_result, printable=True)
