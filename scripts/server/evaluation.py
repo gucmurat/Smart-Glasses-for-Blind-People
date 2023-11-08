@@ -9,6 +9,12 @@ from PIL import Image
 yolov8_path = '../../models/object-detection/v1/yolov8m.pt'
 wotr_path = '../../models/object-detection/v3/best_v3.pt'
 
+# model should pay attention to these class indexes
+wotr_class_pruned_indexes = [0, 1, 2, 3, 4, 12, 13, 14, 15, 16, 20, 21]
+
+# for these indexes, we may not measure distance
+wotr_class_important_indexes = [3, 4, 20, 21]
+
 model_yolov8 = None
 model_wotr = None
 model_midas = None
@@ -44,7 +50,7 @@ def initialize_models():
 def detected_labels_and_boxes_result(model, image):
     results = model.predict(image)
     result = results[0]
-    return {"classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf}
+    return {'names': result.names, "classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf}
 
 def depth_map_result(image):
     if isinstance(image, str):
@@ -74,7 +80,7 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json):
     # TODO 
     # returns distances dict for each boxes
     # example output 
-    # {"classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf, "distances": distances}
+    # {'names': result.names, "classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf, "distances": distances}
     pass
 
 # example usage: get_model_output_from_camera(image_captioning_result, printable=True)
