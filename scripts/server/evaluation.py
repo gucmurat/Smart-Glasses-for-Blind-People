@@ -6,6 +6,7 @@ import numpy as np
 from transformers import pipeline
 from PIL import Image
 import dist_measurement
+import scipy
 
 yolov8_path = '../../models/object-detection/v1/yolov8m.pt'
 wotr_path = '../../models/object-detection/v3/best_v3.pt'
