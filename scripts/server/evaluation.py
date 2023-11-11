@@ -5,6 +5,7 @@ import time
 import numpy as np
 from transformers import pipeline
 from PIL import Image
+import dist_measurement
 
 yolov8_path = '../../models/object-detection/v1/yolov8m.pt'
 wotr_path = '../../models/object-detection/v3/best_v3.pt'
@@ -74,14 +75,63 @@ def image_captioning_result(image):
         image = Image.fromarray(np.uint8(image)).convert('RGB')
     return model_captioning(image)
 
-def stereo_vision_distance_result(image_left, image_right, labels_boxes_json):
-    classes = labels_boxes_json["classes"]
-    boxes = labels_boxes_json["boxes"]
+def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_left, labels_boxes_json_right):   
     # TODO 
     # returns distances dict for each boxes
     # example output 
     # {'names': result.names, "classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf, "distances": distances}
-    pass
+    fl = 75-246.3441162109375*155/490.97529220581055
+    image_left = cv2.cvtColor(image_left, cv2.COLOR_BGR2RGB)
+    image_right = cv2.cvtColor(image_right, cv2.COLOR_BGR2RGB)
+    sz1 = image_right.shape[1]
+    sz2 = image_right.shape[0]
+    det = [labels_boxes_json_left["boxes"], labels_boxes_json_right["boxes"]]
+    lbls = [labels_boxes_json_left["classes"], labels_boxes_json_right["classes"]]
+    
+    centre = sz1/2
+    def get_dist_to_centre_tl(box, cntr = centre):
+        pnts = np.array(dist_measurement.tlbr_to_corner(box))[:,0]
+        return abs(pnts - centre)
+    
+    def get_dist_to_centre_br(box, cntr = centre):
+        pnts = np.array(dist_measurement.tlbr_to_corner_br(box))[:,0]
+        return abs(pnts - centre)
+    cost = dist_measurement.get_cost(det, lbls = lbls)
+    tracks = scipy.optimize.linear_sum_assignment(cost)
+    
+    dists_tl =  dist_measurement.get_horiz_dist_corner_tl(det)
+    dists_br =  dist_measurement.get_horiz_dist_corner_br(det)
+    final_dists = []
+    dctl = get_dist_to_centre_tl(det[0])
+    dcbr = get_dist_to_centre_br(det[0])
+    for i, j in zip(*tracks):
+        if len(lbls) <= i:
+            continue
+        if dctl[i] < dcbr[i]:
+            final_dists.append((dists_tl[i][j],lbls[i]))
+        else:
+            final_dists.append((dists_br[i][j],lbls[i]))
+        
+        
+    tantheta = (1/(155-fl))*(59.0/2)*sz1/246.3441162109375
+    fd = [i for (i,j) in final_dists]
+    dists_away = (59.0/2)*sz1*(1/tantheta)/np.array(fd)+fl
+    cat_dist = []
+    for i in range(len(dists_away)):
+        cat_dist.append(f'{lbls[i]} {dists_away[i]:.1f}cm')
+        print("Estimation:")
+        print(f'{lbls[i]} is {dists_away[i]:.1f}cm away')
+    coordinates = det[0]
+    for coord_ind in range(len(cat_dist)):
+        label = "{:.1f}".format(dists_away[coord_ind]) + " cm away"
+        x_min, y_min, x_max, y_max = coordinates[coord_ind].tolist()
+        cv2.rectangle(image_left, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 255, 0), 2)
+        cv2.putText(image_left, label, (int(x_min), int(y_min) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+        #output_filename = os.path.join(output_folder, f"output_image_{counter}.jpg")
+        #cv2.imwrite(output_filename, image_left)
+    cv2.imshow("Image with Distances", image_left)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
 
 # example usage: get_model_output_from_camera(image_captioning_result, printable=True)
 def get_model_output_from_camera(model_method, show=False, printable=False):
