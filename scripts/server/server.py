@@ -22,17 +22,16 @@ with NumpySocket() as s:
 
             logger.info(f"connection approved: {addr}")
             while conn:
-                frame = conn.recv()
-                if len(frame) == 0:
+                array_of_frames = conn.recv()
+                if len(array_of_frames) == 0:
                     break
-                logging.info("frame is obtained.")
-                result = evaluation.depth_map_result(frame)
-                cv2.imshow("Depth Map", result)
-                #cv2.imshow("Frame", frame)
-
-                # Press Q on keyboard to exit
-                if cv2.waitKey(25) & 0xFF == ord("q"):
-                    exit(1)
+                frame_right = array_of_frames[0]
+                frame_left = array_of_frames[1]
+                
+                cv2.imshow("output", frame_right)
+                cv2.imshow("output", frame_left)
+                if cv2.waitKey(1) & 0xFF == ord('q'):
+                    break
             logger.info(f"disconnection:: {addr}")
         except ConnectionResetError:
             pass
