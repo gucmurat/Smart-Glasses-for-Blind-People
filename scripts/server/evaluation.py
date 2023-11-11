@@ -81,7 +81,8 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     # returns distances dict for each boxes
     # example output 
     # {'names': result.names, "classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf, "distances": distances}
-    fl = 75-246.3441162109375*155/490.97529220581055
+    #fl = 75-246.3441162109375*155/490.97529220581055
+    fl = 59.4-59.858795166015625*89.1/78.972900390625
     image_left = cv2.cvtColor(image_left, cv2.COLOR_BGR2RGB)
     image_right = cv2.cvtColor(image_right, cv2.COLOR_BGR2RGB)
     sz1 = image_right.shape[1]
@@ -114,9 +115,12 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
             final_dists.append((dists_br[i][j],lbls[i]))
         
         
-    tantheta = (1/(155-fl))*(59.0/2)*sz1/246.3441162109375
+    #tantheta = (1/(155-fl))*(59.0/2)*sz1/246.3441162109375
+    tantheta = (1/(89.1-fl))*(5.5/2)*sz1/59.858795166015625
+
     fd = [i for (i,j) in final_dists]
-    dists_away = (59.0/2)*sz1*(1/tantheta)/np.array(fd)+fl
+    #dists_away = (59.0/2)*sz1*(1/tantheta)/np.array(fd)+fl
+    dists_away = (5.5/2)*sz1*(1/tantheta)/np.array(fd)+fl
     cat_dist = []
     for i in range(len(dists_away)):
         cat_dist.append(f'{lbls[i]} {dists_away[i]:.1f}cm')
