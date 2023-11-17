@@ -1,0 +1,3 @@
+The folder named as "1" contains two images of left and right angles from 594 cms.
+The folder named as "2" contains two images of left and right angles from 891 cms. 
+The camera calibration is made by considering these two images.

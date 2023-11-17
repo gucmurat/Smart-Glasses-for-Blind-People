@@ -1,5 +1,5 @@
 #from numpysocket import NumpySocket
-import evaluation 
+import evaluation
 import cv2
 import logging
 
@@ -10,7 +10,7 @@ PORT = 9999
 
 logger = logging.getLogger("OpenCV server")
 logger.setLevel(logging.INFO)
-
+"""
 with NumpySocket() as s:
     s.bind((HOST, PORT))
 
@@ -28,12 +28,15 @@ with NumpySocket() as s:
                 frame_right = array_of_frames[0]
                 frame_left = array_of_frames[1]
                 
-                evaluation.stereo_vision_distance_result(frame_left, 
-                              frame_right, 
-                              evaluation.detected_labels_and_boxes_result(evaluation.model_yolov8,frame_left), 
-                              evaluation.detected_labels_and_boxes_result(evaluation.model_yolov8,frame_right))
+                cv2.imshow("output", frame_right)
+                cv2.imshow("output", frame_left)
                 if cv2.waitKey(1) & 0xFF == ord('q'):
                     break
             logger.info(f"disconnection:: {addr}")
         except ConnectionResetError:
             pass
+"""
+evaluation.stereo_vision_distance_result(cv2.imread("C:/Users/ege/Desktop/calibration_images/left_image_891.png"), 
+                              cv2.imread("C:/Users/ege/Desktop/calibration_images/right_image_891.png"), 
+                              detected_labels_and_boxes_result(model_yolov8,"C:/Users/ege/Desktop/calibration_images/left_image_891.png"), 
+                              detected_labels_and_boxes_result(model_yolov8,"C:/Users/ege/Desktop/calibration_images/right_image_891.png"))
