@@ -135,7 +135,38 @@ def get_tracks_ij(cost):
     return [[i,j] for i, j in zip(*tracks)]
 
 
-
-
+def measure_dist(image_left, image_right, labels_boxes_json_left, labels_boxes_json_right):
+    fl = -37.1140644247583
+    tantheta = 0.230487718076677
+    sz1 = image_right.shape[1]
+    sz2 = image_right.shape[0]
+    det = [labels_boxes_json_left["boxes"], labels_boxes_json_right["boxes"]]
+    lbls = [labels_boxes_json_left["classes"], labels_boxes_json_right["classes"]]
+    centre = sz1/2
+    def get_dist_to_centre_tl(box, cntr = centre):
+        pnts = np.array(tlbr_to_corner(box))[:,0]
+        return abs(pnts - centre)
+    
+    def get_dist_to_centre_br(box, cntr = centre):
+        pnts = np.array(tlbr_to_corner_br(box))[:,0]
+        return abs(pnts - centre)
+    cost = get_cost(det, lbls = lbls)
+    tracks = scipy.optimize.linear_sum_assignment(cost)
+    
+    dists_tl =  get_horiz_dist_corner_tl(det)
+    dists_br =  get_horiz_dist_corner_br(det)
+    final_dists = []
+    dctl = get_dist_to_centre_tl(det[0])
+    dcbr = get_dist_to_centre_br(det[0])
+    for i, j in zip(*tracks):
+        if len(lbls) <= i:
+            continue
+        if dctl[i] < dcbr[i]:
+            final_dists.append((dists_tl[i][j],lbls[i]))
+        else:
+            final_dists.append((dists_br[i][j],lbls[i]))
+    fd = [i for (i,j) in final_dists]
+    dists_away = (5.5/2)*sz1*(1/tantheta)/np.array(fd)+fl
+    return dists_away, det
 
 
