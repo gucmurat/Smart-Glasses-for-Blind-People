@@ -136,8 +136,11 @@ def get_tracks_ij(cost):
 
 
 def measure_dist(image_left, image_right, labels_boxes_json_left, labels_boxes_json_right):
-    fl = -37.1140644247583
+    """fl = -37.1140644247583
     tantheta = 0.230487718076677
+    """
+    fl = -11.7232268698777
+    tantheta = 0.338647631699787
     sz1 = image_right.shape[1]
     sz2 = image_right.shape[0]
     det = [labels_boxes_json_left["boxes"], labels_boxes_json_right["boxes"]]
@@ -166,7 +169,7 @@ def measure_dist(image_left, image_right, labels_boxes_json_left, labels_boxes_j
         else:
             final_dists.append((dists_br[i][j],lbls[i]))
     fd = [i for (i,j) in final_dists]
-    dists_away = (5.5/2)*sz1*(1/tantheta)/np.array(fd)+fl
+    dists_away = (4.8/2)*sz1*(1/tantheta)/np.array(fd)+fl
     return dists_away, det
 
 
