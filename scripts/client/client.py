@@ -18,6 +18,7 @@ with NumpySocket() as s:
     logger.info("connected to the server.")
     while cap_right.isOpened() and cap_left.isOpened():
         ret_right, frame_right = cap_right.read()
+        
         frame_right = cv2.rotate(frame_right, cv2.ROTATE_180)
         #ref_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         ret_left, frame_left = cap_left.read()
@@ -25,11 +26,10 @@ with NumpySocket() as s:
         frame_right_resize = frame_right[::2, ::2]
         frame_left_resize = frame_left[::2, ::2]
 
-        if ret_left and ret_left:
+        if ret_left and ret_right:
             try:
                 array_of_frames = np.array([frame_right_resize, frame_left_resize])
                 s.sendall(array_of_frames)
-
             except Exception:
                 break
         else:
