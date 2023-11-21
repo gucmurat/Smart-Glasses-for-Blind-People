@@ -162,14 +162,15 @@ def measure_dist(image_left, image_right, labels_boxes_json_left, labels_boxes_j
     dctl = get_dist_to_centre_tl(det[0])
     dcbr = get_dist_to_centre_br(det[0])
     for i, j in zip(*tracks):
-        if len(lbls) <= i:
-            continue
         if dctl[i] < dcbr[i]:
-            final_dists.append((dists_tl[i][j],lbls[i]))
+            final_dists.append((dists_tl[i][j],lbls[i][j]))
         else:
-            final_dists.append((dists_br[i][j],lbls[i]))
-    fd = [i for (i,j) in final_dists]
-    dists_away = (4.8/2)*sz1*(1/tantheta)/np.array(fd)+fl
-    return dists_away, det
+            final_dists.append((dists_br[i][j],lbls[i][j]))
+    x = []
+    for (i,j) in final_dists:
+        distance = (4.8/2)*sz1*(1/tantheta)/np.array(i)+fl
+        clss= int(j)
+        x.append((distance,clss))        
+    return x, det
 
 

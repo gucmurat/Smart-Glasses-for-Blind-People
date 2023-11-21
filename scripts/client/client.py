@@ -25,7 +25,13 @@ with NumpySocket() as s:
 
         frame_right_resize = frame_right[::2, ::2]
         frame_left_resize = frame_left[::2, ::2]
-
+        #################################################
+        cv2.imshow("Camera 1", frame_right)
+        cv2.imshow("Camera 2", frame_left)
+        
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+        #################################################
         if ret_left and ret_right:
             try:
                 array_of_frames = np.array([frame_right_resize, frame_left_resize])
@@ -34,3 +40,5 @@ with NumpySocket() as s:
                 break
         else:
             break
+        
+        time.sleep(3)

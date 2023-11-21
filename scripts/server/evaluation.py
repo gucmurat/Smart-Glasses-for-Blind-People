@@ -87,7 +87,9 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     
     image_left = cv2.cvtColor(image_left, cv2.COLOR_BGR2RGB)
     image_right = cv2.cvtColor(image_right, cv2.COLOR_BGR2RGB)
-    dists_away, det = dist_measurement.measure_dist(image_left, image_right, labels_boxes_json_left, labels_boxes_json_right)
+    
+    class_to_tensors = match_detection_results(labels_boxes_json_left, labels_boxes_json_right)
+    
     #Comment the code snippet below out if you want to see the visual representation of the result.
     """
     coordinates = det[0]
@@ -102,7 +104,15 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     """
-    return {'names': labels_boxes_json_left["names"], "classes": labels_boxes_json_left["classes"], "boxes": labels_boxes_json_left["boxes"], "confs": labels_boxes_json_left["confs"], "distances": dists_away}
+    
+    dist_class_list = []
+    for key, value in class_to_tensors.items():
+        dists_away, det = dist_measurement.measure_dist(image_left, image_right, {"classes": key, "boxes": value[0]}, {"classes": key, "boxes": value[1]})
+        d = dists_away[0][0]    
+        c = dists_away[0][1]
+        dist_class_list.append([d,labels_boxes_json_left["names"][c]])
+        
+    return dist_class_list
 
 # example usage: get_model_output_from_camera(image_captioning_result, printable=True)
 def get_model_output_from_camera(model_method, show=False, printable=False):
@@ -131,3 +141,20 @@ def get_model_output_from_frame(model_method, frame ,show=False, printable=False
     if show:
         cv2.imshow("output", result)
     cv2.destroyAllWindows()
+
+def match_detection_results(labels_boxes_json_left, labels_boxes_json_right):
+    class_to_tensors = {}
+    
+    left_classes = labels_boxes_json_left["classes"]
+    right_classes = labels_boxes_json_right["classes"]
+    left_boxes = labels_boxes_json_left["boxes"]
+    right_boxes = labels_boxes_json_right["boxes"]
+    
+    for c in left_classes:
+        if c in right_classes:        
+            index_left = np.where(left_classes == c)[0][0]
+            index_right = np.where(right_classes == c)[0][0]
+            class_to_tensors[left_classes[index_left:index_left+1]] = [left_boxes[index_left:index_left+1, :],right_boxes[index_right:index_right+1, :]]
+        else:
+            continue
+    return class_to_tensors

@@ -1,9 +1,9 @@
-#from numpysocket import NumpySocket
-from evaluation import *
+from numpysocket import NumpySocket
+import evaluation
 import cv2
 import logging
 
-initialize_models()
+evaluation.initialize_models()
 
 HOST = ''
 PORT = 9999
@@ -27,20 +27,16 @@ with NumpySocket() as s:
                     break
                 frame_right = array_of_frames[0]
                 frame_left = array_of_frames[1]
-                
-                result = stereo_vision_distance_result(frame_left, 
+                try:
+                    result = evaluation.stereo_vision_distance_result(frame_left, 
                                                             frame_right, 
-                              detected_labels_and_boxes_result(model_yolov8,frame_left), 
-                              detected_labels_and_boxes_result(model_yolov8,frame_right))
-                print(result)
-                cv2.imshow("output", frame_right)
-                cv2.imshow("output", frame_left)
-                if cv2.waitKey(1) & 0xFF == ord('q'):
-                    break
+                              evaluation.detected_labels_and_boxes_result(evaluation.model_yolov8,frame_left), 
+                              evaluation.detected_labels_and_boxes_result(evaluation.model_yolov8,frame_right))
+                    print(result)
+                except Exception as e:
+                    print(e)
+                    continue
+                
             logger.info(f"disconnection:: {addr}")
         except ConnectionResetError:
             pass
-evaluation.stereo_vision_distance_result(cv2.imread("C:/Users/ege/Desktop/calibration_images/left_image_891.png"), 
-                              cv2.imread("C:/Users/ege/Desktop/calibration_images/right_image_891.png"), 
-                              detected_labels_and_boxes_result(model_yolov8,"C:/Users/ege/Desktop/calibration_images/left_image_891.png"), 
-                              detected_labels_and_boxes_result(model_yolov8,"C:/Users/ege/Desktop/calibration_images/right_image_891.png"))
