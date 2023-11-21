@@ -105,7 +105,7 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     image_right = cv2.cvtColor(image_right, cv2.COLOR_BGR2RGB)
     
     class_to_tensors = match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_json_right)
-    
+    print(class_to_tensors)
     #Comment the code snippet below out if you want to see the visual representation of the result.
     """
     coordinates = det[0]
@@ -181,6 +181,11 @@ def match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_j
                 continue
             
             class_to_tensors[left_classes[index_left:index_left+1]] = [left_boxes[index_left:index_left+1, :],right_boxes[index_right:index_right+1, :]]
+            
+            right_classes_np = right_classes.numpy()
+            right_classes_np[index_right] = -1
+            right_classes = torch.from_numpy(right_classes_np)
+            
         else:
             continue
     return class_to_tensors
