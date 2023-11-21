@@ -52,9 +52,14 @@ def initialize_models():
 
     model_captioning = pipeline("image-to-text", model="nlpconnect/vit-gpt2-image-captioning")
 
-def detected_labels_and_boxes_result(model, image):
-    results = model.predict(image)
-    result = results[0]
+def detected_labels_and_boxes_result(model, image, model_type):
+    results = None
+    if model_type=="wotr":
+        results = model.predict(image, classes=wotr_class_pruned_indexes)
+        result = results[0]
+    elif model_type=="yolo":
+        results = model.predict(image)
+        result = results[0]
     return {'names': result.names, "classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf}
 
 def depth_map_result(image):
@@ -79,6 +84,17 @@ def image_captioning_result(image):
         image = Image.fromarray(np.uint8(image)).convert('RGB')
     return model_captioning(image)
 
+def get_distance_values_from_objects(image_left, image_right):
+    result_from_yolov8 = stereo_vision_distance_result(image_left, 
+                                           image_right, 
+                              detected_labels_and_boxes_result(model_yolov8,image_left, "yolo"), 
+                              detected_labels_and_boxes_result(model_yolov8,image_right, "yolo"))
+    result_from_wotr = stereo_vision_distance_result(image_left, 
+                                           image_right, 
+                              detected_labels_and_boxes_result(model_wotr,image_left, "yolo"), 
+                              detected_labels_and_boxes_result(model_wotr,image_right, "wotr"))
+    return result_from_yolov8 + result_from_wotr
+    
 def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_left, labels_boxes_json_right):   
     # TODO 
     # returns distances dict for each boxes
@@ -88,7 +104,7 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     image_left = cv2.cvtColor(image_left, cv2.COLOR_BGR2RGB)
     image_right = cv2.cvtColor(image_right, cv2.COLOR_BGR2RGB)
     
-    class_to_tensors = match_detection_results(labels_boxes_json_left, labels_boxes_json_right)
+    class_to_tensors = match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_json_right)
     
     #Comment the code snippet below out if you want to see the visual representation of the result.
     """
@@ -142,18 +158,28 @@ def get_model_output_from_frame(model_method, frame ,show=False, printable=False
         cv2.imshow("output", result)
     cv2.destroyAllWindows()
 
-def match_detection_results(labels_boxes_json_left, labels_boxes_json_right):
+def match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_json_right):
     class_to_tensors = {}
+    
+    threshold = 0.60
     
     left_classes = labels_boxes_json_left["classes"]
     right_classes = labels_boxes_json_right["classes"]
     left_boxes = labels_boxes_json_left["boxes"]
     right_boxes = labels_boxes_json_right["boxes"]
+    left_confs = labels_boxes_json_left["confs"].numpy()
+    right_confs = labels_boxes_json_right["confs"].numpy()
     
     for c in left_classes:
         if c in right_classes:        
             index_left = np.where(left_classes == c)[0][0]
             index_right = np.where(right_classes == c)[0][0]
+            
+            avg = (left_confs[index_left] + right_confs[index_right]) / 2
+            
+            if avg < threshold:
+                continue
+            
             class_to_tensors[left_classes[index_left:index_left+1]] = [left_boxes[index_left:index_left+1, :],right_boxes[index_right:index_right+1, :]]
         else:
             continue
