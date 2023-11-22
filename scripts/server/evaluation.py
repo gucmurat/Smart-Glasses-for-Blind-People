@@ -122,19 +122,14 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     cv2.destroyAllWindows()
     """
     
-    dist_class_list = []
-    angle_class_list = {}
-    percentages_left = [0.1, 0.3, 0.4, 0.2]
-    percentages_right = [0.2, 0.4, 0.3, 0.1]
+    dist_direction_class_list = []
     for key, value in class_to_tensors.items():
         dists_away, det = dist_measurement.measure_dist(image_left, image_right, {"classes": key, "boxes": value[0]}, {"classes": key, "boxes": value[1]})
         d = dists_away[0][0]    
         c = dists_away[0][1]
-        dist_class_list.append([d,labels_boxes_json_left["names"][c]])
-        left_angle = direction_detection.divide_and_show(image_left, percentages_left, value[0])
-        right_angle = direction_detection.divide_and_show(image_right, percentages_right, value[1])
-        angle_class_list[labels_boxes_json_left["names"][c]] = "left: " + str(left_angle) + " , right: " + str(right_angle)
-    return dist_class_list, angle_class_list
+        direction = direction_detection.get_object_direction(image_left, image_right, value)
+        dist_direction_class_list.append([d,direction,labels_boxes_json_left["names"][c]])
+    return dist_direction_class_list
 
 
 # example usage: get_model_output_from_camera(image_captioning_result, printable=True)
