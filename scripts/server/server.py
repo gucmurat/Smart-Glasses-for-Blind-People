@@ -28,10 +28,7 @@ with NumpySocket() as s:
                 frame_right = array_of_frames[0]
                 frame_left = array_of_frames[1]
                 try:
-                    result = evaluation.stereo_vision_distance_result(frame_left, 
-                                                            frame_right, 
-                              evaluation.detected_labels_and_boxes_result(evaluation.model_yolov8,frame_left), 
-                              evaluation.detected_labels_and_boxes_result(evaluation.model_yolov8,frame_right))
+                    result = evaluation.get_distance_values_from_objects(frame_left, frame_right)
                     print(result)
                 except Exception as e:
                     print(e)

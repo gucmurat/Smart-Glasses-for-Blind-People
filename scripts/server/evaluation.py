@@ -92,7 +92,7 @@ def get_distance_values_from_objects(image_left, image_right):
                               detected_labels_and_boxes_result(model_yolov8,image_right, "yolo"))
     result_from_wotr = stereo_vision_distance_result(image_left, 
                                            image_right, 
-                              detected_labels_and_boxes_result(model_wotr,image_left, "yolo"), 
+                              detected_labels_and_boxes_result(model_wotr,image_left, "wotr"), 
                               detected_labels_and_boxes_result(model_wotr,image_right, "wotr"))
     return result_from_yolov8 + result_from_wotr
     
@@ -106,7 +106,6 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     image_right = cv2.cvtColor(image_right, cv2.COLOR_BGR2RGB)
     
     class_to_tensors = match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_json_right)
-    print(class_to_tensors)
     #Comment the code snippet below out if you want to see the visual representation of the result.
     """
     coordinates = det[0]
@@ -123,11 +122,11 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     """
     
     dist_direction_class_list = []
-    for key, value in class_to_tensors.items():
-        dists_away, det = dist_measurement.measure_dist(image_left, image_right, {"classes": key, "boxes": value[0]}, {"classes": key, "boxes": value[1]})
+    for tuple in class_to_tensors:
+        dists_away, det = dist_measurement.measure_dist(image_left, image_right, {"classes": tuple[0], "boxes": tuple[1][0]}, {"classes": tuple[0], "boxes": tuple[1][1]})
         d = dists_away[0][0]    
         c = dists_away[0][1]
-        direction = direction_detection.get_object_direction(image_left, image_right, value)
+        direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
         dist_direction_class_list.append([d,direction,labels_boxes_json_left["names"][c]])
     return dist_direction_class_list
 
@@ -161,12 +160,12 @@ def get_model_output_from_frame(model_method, frame ,show=False, printable=False
     cv2.destroyAllWindows()
 
 def match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_json_right):
-    class_to_tensors = {}
+    class_to_tensors = []
     
     threshold = 0.60
     
-    left_classes = labels_boxes_json_left["classes"]
-    right_classes = labels_boxes_json_right["classes"]
+    left_classes = labels_boxes_json_left["classes"].numpy()
+    right_classes = labels_boxes_json_right["classes"].numpy()
     left_boxes = labels_boxes_json_left["boxes"]
     right_boxes = labels_boxes_json_right["boxes"]
     left_confs = labels_boxes_json_left["confs"].numpy()
@@ -182,11 +181,11 @@ def match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_j
             if avg < threshold:
                 continue
             
-            class_to_tensors[left_classes[index_left:index_left+1]] = [left_boxes[index_left:index_left+1, :],right_boxes[index_right:index_right+1, :]]
+            key = int(left_classes[index_left:index_left+1][0])
+            class_to_tensors.append((torch.from_numpy(np.array([key])), [left_boxes[index_left:index_left+1, :],right_boxes[index_right:index_right+1, :]]))
             
-            right_classes_np = right_classes.numpy()
-            right_classes_np[index_right] = -1
-            right_classes = torch.from_numpy(right_classes_np)
+            left_classes[index_left] = -1
+            right_classes[index_right] = -1
             
         else:
             continue

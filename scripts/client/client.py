@@ -41,4 +41,3 @@ with NumpySocket() as s:
         else:
             break
         
-        time.sleep(3)
