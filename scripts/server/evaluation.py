@@ -11,6 +11,7 @@ import sys
 sys.path.insert(1, '../utils/')
 import dist_measurement
 import direction_detection
+import midas_object_detection
 
 yolov8_path = '../../models/object-detection/v1/yolov8m.pt'
 wotr_path = '../../models/object-detection/v3/best_v3.pt'
@@ -78,6 +79,8 @@ def depth_map_result(image):
 
     depth_map = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min()) * 255
     depth_map = depth_map.astype(np.uint8)
+    midas_object_detection.detect_boxes_with_mask_midas(depth_map)
+    midas_object_detection.detect_boxes_with_edges_midas(depth_map)
     return depth_map
 
 def image_captioning_result(image):
