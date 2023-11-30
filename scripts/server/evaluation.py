@@ -103,32 +103,27 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     # TODO 
     # returns distances dict for each boxes
     # example output 
-    # {'names': result.names, "classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf, "distances": distances}
+    # [[dist, direction, class_name],[60.0, 12, 'cup'],...]
     
     image_left = cv2.cvtColor(image_left, cv2.COLOR_BGR2RGB)
     image_right = cv2.cvtColor(image_right, cv2.COLOR_BGR2RGB)
     
     class_to_tensors = match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_json_right)
-    #Comment the code snippet below out if you want to see the visual representation of the result.
-    """
-    coordinates = det[0]
-    for coord_ind in range(len(dists_away)):
-        class_index = int(labels_boxes_json_left["classes"].item())
-        class_name = labels_boxes_json_left["names"][class_index]
-        label = class_name + " is " + "{:.1f}".format(dists_away[coord_ind]) + " cm away"
-        x_min, y_min, x_max, y_max = coordinates[coord_ind].tolist()
-        cv2.rectangle(image_left, (int(x_min), int(y_min)), (int(x_max), int(y_max)), (0, 255, 0), 2)
-        cv2.putText(image_left, label, (int(x_min), int(y_min) - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
-    cv2.imshow("Image with Distances", image_left)
-    cv2.waitKey(0)
-    cv2.destroyAllWindows()
-    """
     
     dist_direction_class_list = []
     for tuple in class_to_tensors:
-        dists_away, det = dist_measurement.measure_dist(image_left, image_right, {"classes": tuple[0], "boxes": tuple[1][0]}, {"classes": tuple[0], "boxes": tuple[1][1]})
         d = dists_away[0][0]    
         c = dists_away[0][1]
+        #handle wotr_class_important_indexes 
+        if c in wotr_class_important_indexes:
+            direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
+            dist_direction_class_list.append([-1,direction,labels_boxes_json_left["names"][c]])
+            
+        dists_away, det = dist_measurement.measure_dist(image_left, image_right, {"classes": tuple[0], "boxes": tuple[1][0]}, {"classes": tuple[0], "boxes": tuple[1][1]})
+        
+        #eliminate negative distance measurements
+        if d<0:
+            continue
         direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
         dist_direction_class_list.append([d,direction,labels_boxes_json_left["names"][c]])
     return dist_direction_class_list
