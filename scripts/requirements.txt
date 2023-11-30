@@ -6,3 +6,5 @@ transformers
 numpysocket
 timm
 scipy
+fastapi
+uvicorn
