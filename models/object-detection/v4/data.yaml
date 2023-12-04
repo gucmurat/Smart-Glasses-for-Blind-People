@@ -1,0 +1,32 @@
+names:
+ - 'tree'
+ - 'red_light'
+ - 'green_light'
+ - 'crosswalk'
+ - 'tactile_paving'
+ - 'sign'
+ - 'pedestrian'
+ - 'bicycle'
+ - 'bus'
+ - 'truck'
+ - 'car'
+ - 'motorcycle'
+ - 'reflective_cone'
+ - 'ashcan'
+ - 'warning_column'
+ - 'roadblock'
+ - 'pole'
+ - 'dog'
+ - 'tricycle'
+ - 'fire_hydrant'
+ - 'downstair'
+ - 'upstair'
+ - 'door_closed'
+ - 'door_opened'
+ - 'door_semi_opened'
+ 
+nc: 25
+
+test: /content/drive/MyDrive/dataset/test/images
+train: /content/drive/MyDrive/dataset/train/images
+val: /content/drive/MyDrive/dataset/val/images
