@@ -7,8 +7,8 @@ import numpy as np
 HOST = 'localhost'
 PORT = 9999
 
-cap_right = cv2.VideoCapture(0) # right(reversed)
-cap_left = cv2.VideoCapture(1) # left
+cap_right = cv2.VideoCapture(1) # right(reversed)
+cap_left = cv2.VideoCapture(0) # left
 
 logger = logging.getLogger("OpenCV server")
 logger.setLevel(logging.INFO)
@@ -25,18 +25,13 @@ with NumpySocket() as s:
 
         frame_right_resize = frame_right[::2, ::2]
         frame_left_resize = frame_left[::2, ::2]
-        #################################################
-        cv2.imshow("Camera 1", frame_right)
-        cv2.imshow("Camera 2", frame_left)
         
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-        #################################################
         if ret_left and ret_right:
             try:
                 array_of_frames = np.array([frame_right_resize, frame_left_resize])
                 s.sendall(array_of_frames)
-            except Exception:
+            except Exception as e:
+                print(e)
                 break
         else:
             break

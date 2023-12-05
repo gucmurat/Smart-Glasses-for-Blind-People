@@ -14,10 +14,10 @@ import direction_detection
 import midas_object_detection
 
 yolov8_path = '../../models/object-detection/v1/yolov8m.pt'
-wotr_path = '../../models/object-detection/v3/best_v3.pt'
+wotr_path = '../../models/object-detection/v4/best_v4.pt'
 
 # model should pay attention to these class indexes
-wotr_class_pruned_indexes = [0, 1, 2, 3, 4, 12, 13, 14, 15, 16, 20, 21]
+wotr_class_pruned_indexes = [0, 1, 2, 3, 4, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24]
 
 # for these indexes, we may not measure distance
 wotr_class_important_indexes = [3, 4, 20, 21]
@@ -112,15 +112,13 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     
     dist_direction_class_list = []
     for tuple in class_to_tensors:
+        dists_away, det = dist_measurement.measure_dist(image_left, image_right, {"classes": tuple[0], "boxes": tuple[1][0]}, {"classes": tuple[0], "boxes": tuple[1][1]})
         d = dists_away[0][0]    
         c = dists_away[0][1]
-        #handle wotr_class_important_indexes 
+         #handle wotr_class_important_indexes 
         if c in wotr_class_important_indexes:
             direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
             dist_direction_class_list.append([-1,direction,labels_boxes_json_left["names"][c]])
-            
-        dists_away, det = dist_measurement.measure_dist(image_left, image_right, {"classes": tuple[0], "boxes": tuple[1][0]}, {"classes": tuple[0], "boxes": tuple[1][1]})
-        
         #eliminate negative distance measurements
         if d<0:
             continue
@@ -188,3 +186,13 @@ def match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_j
         else:
             continue
     return class_to_tensors
+
+def result_to_sentence(input_list):
+    # input: [[dist, direction, class_name],[60.0, 12, 'cup'],...]
+    sentence = ""
+    for obj in input_list:
+        if obj[0] == -1:
+            sentence += f"{obj[2]} is detected, on the direction of {obj[1]} oclock. "
+        else:
+            sentence += f"{obj[2]} is detected {int(obj[0])} cm away, on the direction of {obj[1]} oclock. "
+    return sentence
