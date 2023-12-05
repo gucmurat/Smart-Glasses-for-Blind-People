@@ -9,6 +9,8 @@ evaluation.initialize_models()
 HOST = ''
 PORT = 9999
 
+url = "http://127.0.0.1:8000/send_text"
+
 logger = logging.getLogger("OpenCV server")
 logger.setLevel(logging.INFO)
 
@@ -36,28 +38,17 @@ with NumpySocket() as s:
                 
                 obj_result = evaluation.get_distance_values_from_objects(frame_left, frame_right)
                 obj_sentence = evaluation.result_to_sentence(obj_result)
-                print(obj_sentence)
-                capt_result = evaluation.image_captioning_result(frame_left)[0]['generated_text']
-                print(capt_result)
-                
-                
+                if obj_sentence != "":
+                    data = {"text": obj_sentence}
+                    response = requests.post(url, json=data)
                 if key == ord('q'):
                     break
-                elif key == ord('a'):
+                elif key == ord('i'):
                     try:
-                        pass
-                        #url = "http://127.0.0.1:8000/send_text"
-                        #data = {"text": obj_sentence}
-                        #response = requests.post(url, json=data)
-                    except Exception as e:
-                        print(e)
-                        continue
-                elif key == ord('s'):
-                    try:
-                        pass
-                        #url = "http://127.0.0.1:8000/send_text"
-                        #data = {"text": capt_result}
-                        #response = requests.post(url, json=data)
+                        capt_result = evaluation.image_captioning_result(frame_left)[0]['generated_text']
+                        print(capt_result)
+                        data = {"text": capt_result}
+                        response = requests.post(url, json=data)
                     except Exception as e:
                         print(e)
                         continue

@@ -6,6 +6,7 @@ import numpy as np
 from transformers import pipeline
 from PIL import Image
 import scipy
+import hashlib
 
 import sys
 sys.path.insert(1, '../utils/')
@@ -28,6 +29,8 @@ model_midas = None
 model_captioning = None
 transform_midas = None
 device_midas = None
+
+detected_objects = {}
 
 def initialize_models():
     global model_yolov8
@@ -118,12 +121,16 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
          #handle wotr_class_important_indexes 
         if c in wotr_class_important_indexes:
             direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
-            dist_direction_class_list.append([-1,direction,labels_boxes_json_left["names"][c]])
+            obj = [-1,direction,labels_boxes_json_left["names"][c]]
+            obj.append(obj_to_sha256(obj))
+            dist_direction_class_list.append(obj)
         #eliminate negative distance measurements
         if d<0:
             continue
         direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
-        dist_direction_class_list.append([d,direction,labels_boxes_json_left["names"][c]])
+        obj = [d,direction,labels_boxes_json_left["names"][c]]
+        obj.append(obj_to_sha256(obj))
+        dist_direction_class_list.append(obj)
     return dist_direction_class_list
 
 
@@ -190,9 +197,29 @@ def match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_j
 def result_to_sentence(input_list):
     # input: [[dist, direction, class_name],[60.0, 12, 'cup'],...]
     sentence = ""
+    obj_ids = []
     for obj in input_list:
-        if obj[0] == -1:
-            sentence += f"{obj[2]} is detected, on the direction of {obj[1]} oclock. "
+        obj_id = obj[3]
+        obj_ids.append(obj_id)
+        if obj_id not in detected_objects:
+            detected_objects[obj_id] = obj
+            if obj[0] == -1:
+                sentence += f"{obj[2]} is detected, on the direction of {obj[1]} oclock. "
+            else:
+                sentence += f"{obj[2]} is detected {int(obj[0])} cm away, on the direction of {obj[1]} oclock. "
         else:
-            sentence += f"{obj[2]} is detected {int(obj[0])} cm away, on the direction of {obj[1]} oclock. "
+            continue
+    for key, value in dict(detected_objects).items():
+        if key not in obj_ids:
+            removed_value = detected_objects.pop(key)
     return sentence
+            
+def obj_to_sha256(obj):
+    # input: [[dist, direction, class_name],[60.0, 12, 'cup'],...]
+    m = hashlib.sha256()
+    dist_cut = round(obj[0]/40)
+    m.update(dist_cut.to_bytes(2, 'big'))
+    m.update(obj[1].to_bytes(2, 'big'))
+    m.digest()
+    # output = '27cf47520c67cb4949dd5f6796529562f1800de86e339970e9cad9dddd0e2ab8'
+    return str(m.hexdigest())

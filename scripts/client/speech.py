@@ -31,3 +31,5 @@ url = "http://127.0.0.1:8000/send_text"
 data = {"text": "HelloFromClient"}
 response = requests.post(url, json=data)
 """
+
+#uvicorn speech:app --port 8000
