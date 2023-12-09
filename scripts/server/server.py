@@ -16,7 +16,7 @@ logger.setLevel(logging.INFO)
 
 with NumpySocket() as s:
     s.bind((HOST, PORT))
-
+    i = 0
     while True:
         try:
             s.listen()
@@ -34,24 +34,28 @@ with NumpySocket() as s:
                 cv2.imshow("Camera 1", frame_right)
                 cv2.imshow("Camera 2", frame_left)
                 
-                key = cv2.waitKey(1) & 0xFF  # Capture the key event once
+                key = cv2.waitKey(1) & 0xFF
                 
-                obj_result = evaluation.get_distance_values_from_objects(frame_left, frame_right)
-                obj_sentence = evaluation.result_to_sentence(obj_result)
-                if obj_sentence != "":
-                    data = {"text": obj_sentence}
-                    response = requests.post(url, json=data)
-                if key == ord('q'):
-                    break
-                elif key == ord('i'):
+                if i%5!=0 or i==0:
+                    obj_result = evaluation.get_distance_values_from_objects(frame_left, frame_right)
+                    obj_sentence = evaluation.result_to_sentence(obj_result)
+                    if obj_sentence != "":
+                        data = {"text": obj_sentence}
+                        response = requests.post(url, json=data)
+                        i+=1
+                else:
                     try:
                         capt_result = evaluation.image_captioning_result(frame_left)[0]['generated_text']
                         print(capt_result)
                         data = {"text": capt_result}
                         response = requests.post(url, json=data)
+                        i+=1
                     except Exception as e:
                         print(e)
-                        continue
+                        continue 
+                    
+                if key == ord('q'):
+                    break                    
                 #################################################
                 
                 

@@ -21,7 +21,7 @@ wotr_path = '../../models/object-detection/v4/best_v4.pt'
 wotr_class_pruned_indexes = [0, 1, 2, 3, 4, 12, 13, 14, 15, 16, 20, 21, 22, 23, 24]
 
 # for these indexes, we may not measure distance
-wotr_class_important_indexes = [3, 4, 20, 21]
+wotr_class_important_indexes = [3, 4, 20, 21, 22, 23, 24]
 
 model_yolov8 = None
 model_wotr = None
@@ -217,7 +217,7 @@ def result_to_sentence(input_list):
 def obj_to_sha256(obj):
     # input: [[dist, direction, class_name],[60.0, 12, 'cup'],...]
     m = hashlib.sha256()
-    dist_cut = round(obj[0]/40)
+    dist_cut = int(obj[0]/40)
     m.update(dist_cut.to_bytes(2, 'big'))
     m.update(obj[1].to_bytes(2, 'big'))
     m.digest()
