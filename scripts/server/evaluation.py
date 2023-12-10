@@ -7,7 +7,7 @@ from transformers import pipeline
 from PIL import Image
 import scipy
 import hashlib
-
+import matplotlib.pyplot as plt
 import sys
 sys.path.insert(1, '../utils/')
 import dist_measurement
@@ -72,6 +72,7 @@ def depth_map_result(image):
         input_image = cv2.imread(image)
     else:
         input_image = image
+    
     input_image = cv2.cvtColor(input_image, cv2.COLOR_BGR2RGB)
     input_image = transform_midas(input_image).to(device_midas)
 
@@ -82,20 +83,41 @@ def depth_map_result(image):
 
     depth_map = (depth_map - depth_map.min()) / (depth_map.max() - depth_map.min()) * 255
     depth_map = depth_map.astype(np.uint8)
-    midas_object_detection.detect_boxes_with_mask_midas(depth_map)
-    midas_object_detection.detect_boxes_with_edges_midas(depth_map)
-    return depth_map
+    return midas_object_detection.detect_boxes_with_mask_midas(depth_map,image)
 
+def update_detected_labels_and_boxes_with_midas(detected_yolo_left, detected_yolo_right, image_left, image_right):
+    next_class = max(detected_yolo_left['names'].keys()) + 1
+    detected_yolo_left['names'][next_class] = 'undetected obstacle'
+    detected_yolo_right['names'][next_class] = 'undetected obstacle'
+    
+    depth_map_boxes_left = depth_map_result(image_left)
+    depth_map_boxes_right = depth_map_result(image_right)
+    
+    detected_midas_left = midas_object_detection.compare_detections_from_alg_midas(depth_map_boxes_left,detected_yolo_left,image_left)
+    detected_midas_right = midas_object_detection.compare_detections_from_alg_midas(depth_map_boxes_right,detected_yolo_right,image_right)
+    
+    for detected_box in detected_midas_left:
+        new_box = torch.tensor(detected_box)
+        detected_yolo_left['classes'] = torch.cat((detected_yolo_left['classes'], torch.tensor([float(next_class)])))
+        detected_yolo_left['boxes'] = torch.cat((detected_yolo_left['boxes'],  new_box.unsqueeze(0)))
+        detected_yolo_left['confs'] = torch.cat((detected_yolo_left['confs'], torch.tensor([1.0]))) 
+    for detected_box in detected_midas_right:
+        new_box = torch.tensor(detected_box)
+        detected_yolo_right['classes'] = torch.cat((detected_yolo_right['classes'], torch.tensor([float(next_class)])))
+        detected_yolo_right['boxes'] = torch.cat((detected_yolo_right['boxes'], new_box.unsqueeze(0)))
+        detected_yolo_right['confs'] = torch.cat((detected_yolo_right['confs'], torch.tensor([1.0])))  
+        
+    return detected_yolo_left, detected_yolo_right
+    
 def image_captioning_result(image):
     if not isinstance(image, str):
         image = Image.fromarray(np.uint8(image)).convert('RGB')
     return model_captioning(image)
 
 def get_distance_values_from_objects(image_left, image_right):
+    detected_yolo_left, detected_yolo_right = update_detected_labels_and_boxes_with_midas(detected_labels_and_boxes_result(model_yolov8,image_left, "yolo"), detected_labels_and_boxes_result(model_yolov8,image_right, "yolo"), image_left, image_right)
     result_from_yolov8 = stereo_vision_distance_result(image_left, 
-                                           image_right, 
-                              detected_labels_and_boxes_result(model_yolov8,image_left, "yolo"), 
-                              detected_labels_and_boxes_result(model_yolov8,image_right, "yolo"))
+                                           image_right, detected_yolo_left, detected_yolo_right)
     result_from_wotr = stereo_vision_distance_result(image_left, 
                                            image_right, 
                               detected_labels_and_boxes_result(model_wotr,image_left, "wotr"), 
@@ -107,7 +129,8 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
     # returns distances dict for each boxes
     # example output 
     # [[dist, direction, class_name],[60.0, 12, 'cup'],...]
-    
+    image_left_initial = image_left
+    image_right_initial = image_right
     image_left = cv2.cvtColor(image_left, cv2.COLOR_BGR2RGB)
     image_right = cv2.cvtColor(image_right, cv2.COLOR_BGR2RGB)
     
@@ -131,6 +154,7 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
         obj = [d,direction,labels_boxes_json_left["names"][c]]
         obj.append(obj_to_sha256(obj))
         dist_direction_class_list.append(obj)
+        
     return dist_direction_class_list
 
 
