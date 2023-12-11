@@ -150,6 +150,9 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
         #eliminate negative distance measurements
         if d<0:
             continue
+        #eliminate undetected objects that has distance higher than 100 cm 
+        if c==80 and d>100:
+            continue
         direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
         obj = [d,direction,labels_boxes_json_left["names"][c]]
         obj.append(obj_to_sha256(obj))
