@@ -5,8 +5,8 @@ from fastapi import FastAPI, HTTPException, Request
 def text_to_speech(tx):
     tx = repr(tx)
     syst = platform.system()
-    if syst == 'Linux' and platform.linux_distribution()[0] == "Ubuntu":
-        os.system('spd-say %s' % tx)
+    if syst == 'Linux':
+        os.system('gtts-cli %s --output init.mp3 & cvlc --play-and-exit init.mp3' % tx)
     elif syst == 'Windows':
         os.system('PowerShell -Command "Add-Type –AssemblyName System.Speech; (New-Object System.Speech.Synthesis.SpeechSynthesizer).Speak(%s);"' % tx)
     elif syst == 'Darwin':
