@@ -8,3 +8,5 @@ timm
 scipy
 fastapi
 uvicorn
+scikit-image
+matplotlib
