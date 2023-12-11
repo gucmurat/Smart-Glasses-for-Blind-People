@@ -141,16 +141,16 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
         dists_away, det = dist_measurement.measure_dist(image_left, image_right, {"classes": tuple[0], "boxes": tuple[1][0]}, {"classes": tuple[0], "boxes": tuple[1][1]})
         d = dists_away[0][0]    
         c = dists_away[0][1]
-         #handle wotr_class_important_indexes 
+        # handle wotr_class_important_indexes 
         if c in wotr_class_important_indexes:
             direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
             obj = [-1,direction,labels_boxes_json_left["names"][c]]
             obj.append(obj_to_sha256(obj))
             dist_direction_class_list.append(obj)
-        #eliminate negative distance measurements
+        # eliminate negative distance measurements
         if d<0:
             continue
-        #eliminate undetected objects that has distance higher than 100 cm 
+        # eliminate undetected objects that have distance higher than 100 cm 
         if c==80 and d>100:
             continue
         direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
@@ -224,6 +224,13 @@ def match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_j
 def result_to_sentence(input_list):
     # input: [[dist, direction, class_name],[60.0, 12, 'cup'],...]
     sentence = ""
+    
+    # input list is sorted to tell nearest objects first. 
+    # sentence will contain at most 3 objects.
+    input_list = sorted(input_list, key=lambda x: x[0])
+    if len(input_list)>4:
+        input_list=input_list[:4]
+        
     obj_ids = []
     for obj in input_list:
         obj_id = obj[3]
