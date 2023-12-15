@@ -36,20 +36,29 @@ with NumpySocket() as s:
                 
                 key = cv2.waitKey(1) & 0xFF
                 
-                if i%5!=0 or i==0:
+                image_capt_flag = 0                
+                
+                if i%5!=0 or i==0:    
                     obj_result = evaluation.get_distance_values_from_objects(frame_left, frame_right)
                     obj_sentence = evaluation.result_to_sentence(obj_result)
+                    sentence_list = obj_sentence.split(". ")
+                    
+                    if len(sentence_list)>4:
+                        obj_sentence = ". ".join(sentence_list[:3])
+                        image_capt_flag = 1
                     if obj_sentence != "":
                         data = {"text": obj_sentence}
                         response = requests.post(url, json=data)
                         i+=1
-                else:
+                                          
+                elif (i%5==0 and i!=0) or image_capt_flag==1:
                     try:
                         capt_result = evaluation.image_captioning_result(frame_left)[0]['generated_text']
                         print(capt_result)
                         data = {"text": capt_result}
                         response = requests.post(url, json=data)
-                        i+=1
+                        if image_capt_flag==0:
+                            i+=1    
                     except Exception as e:
                         print(e)
                         continue 

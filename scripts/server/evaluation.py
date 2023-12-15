@@ -228,8 +228,8 @@ def result_to_sentence(input_list):
     # input list is sorted to tell nearest objects first. 
     # sentence will contain at most 3 objects.
     input_list = sorted(input_list, key=lambda x: x[0])
-    if len(input_list)>4:
-        input_list=input_list[:4]
+    #if len(input_list)>4:
+    #    input_list=input_list[:4]
         
     obj_ids = []
     for obj in input_list:
