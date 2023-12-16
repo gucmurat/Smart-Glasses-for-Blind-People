@@ -150,8 +150,8 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
         # eliminate negative distance measurements
         if d<0:
             continue
-        # eliminate undetected objects that have distance higher than 100 cm 
-        if c==80 and d>100:
+        # eliminate undetected objects that have distance higher than 100 cm, lower than 20
+        if c==80 and (d>150 or d<20):
             continue
         direction = direction_detection.get_object_direction(image_left, image_right, tuple[1])
         obj = [d,direction,labels_boxes_json_left["names"][c]]
@@ -240,7 +240,10 @@ def result_to_sentence(input_list):
             if obj[0] == -1:
                 sentence += f"{obj[2]} is detected, on the direction of {obj[1]} oclock. "
             else:
-                sentence += f"{obj[2]} is detected {int(obj[0])} cm away, on the direction of {obj[1]} oclock. "
+                try:
+                    sentence += f"{obj[2]} is detected {int(obj[0])} cm away, on the direction of {obj[1]} oclock. "
+                except:
+                    sentence += f"{obj[2]} is detected, on the direction of {obj[1]} oclock. "
         else:
             continue
     for key, value in dict(detected_objects).items():
@@ -251,7 +254,10 @@ def result_to_sentence(input_list):
 def obj_to_sha256(obj):
     # input: [[dist, direction, class_name],[60.0, 12, 'cup'],...]
     m = hashlib.sha256()
-    dist_cut = int(obj[0]/40)
+    try:
+        dist_cut = int(obj[0]/40)
+    except:
+        dist_cut = 1
     m.update(dist_cut.to_bytes(2, 'big'))
     m.update(obj[1].to_bytes(2, 'big'))
     m.digest()
