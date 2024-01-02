@@ -136,11 +136,13 @@ def get_tracks_ij(cost):
 
 
 def measure_dist(image_left, image_right, labels_boxes_json_left, labels_boxes_json_right):
-    """fl = -37.1140644247583
-    tantheta = 0.230487718076677
     """
+    # laptop values
     fl = -11.7232268698777
     tantheta = 0.338647631699787
+    """
+    fl = -5.31095601000435
+    tantheta = 0.359981447355226
     sz1 = image_right.shape[1]
     sz2 = image_right.shape[0]
     det = [labels_boxes_json_left["boxes"], labels_boxes_json_right["boxes"]]
