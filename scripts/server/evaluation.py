@@ -238,12 +238,12 @@ def result_to_sentence(input_list):
         if obj_id not in detected_objects:
             detected_objects[obj_id] = obj
             if obj[0] == -1:
-                sentence += f"{obj[2]} is detected, on the direction of {obj[1]} oclock. "
+                sentence += f"{obj[2]}, {obj[1]} oclock. "
             else:
                 try:
-                    sentence += f"{obj[2]} is detected {int(obj[0])} cm away, on the direction of {obj[1]} oclock. "
+                    sentence += f"{obj[2]}, {int(obj[0])} cm, {obj[1]} oclock. "
                 except:
-                    sentence += f"{obj[2]} is detected, on the direction of {obj[1]} oclock. "
+                    sentence += f"{obj[2]}, {obj[1]} oclock. "
         else:
             continue
     for key, value in dict(detected_objects).items():
@@ -253,13 +253,15 @@ def result_to_sentence(input_list):
             
 def obj_to_sha256(obj):
     # input: [[dist, direction, class_name],[60.0, 12, 'cup'],...]
-    m = hashlib.sha256()
     try:
+        m = hashlib.sha256()
         dist_cut = int(obj[0]/40)
+        m.update(dist_cut.to_bytes(2, 'big'))
+        m.update(obj[1].to_bytes(2, 'big'))
+        m.digest()
     except:
-        dist_cut = 1
-    m.update(dist_cut.to_bytes(2, 'big'))
-    m.update(obj[1].to_bytes(2, 'big'))
-    m.digest()
+        m = hashlib.sha256()
+        m.update(obj[1].to_bytes(2, 'big'))
+        m.digest()
     # output = '27cf47520c67cb4949dd5f6796529562f1800de86e339970e9cad9dddd0e2ab8'
     return str(m.hexdigest())
