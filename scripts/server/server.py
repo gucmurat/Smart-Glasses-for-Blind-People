@@ -9,7 +9,7 @@ evaluation.initialize_models()
 HOST = ''
 PORT = 9999
 
-url = "http://127.0.0.1:8000/send_text"
+url = "http://127.0.0.1:8002/send_text"
 
 logger = logging.getLogger("OpenCV server")
 logger.setLevel(logging.INFO)
@@ -38,7 +38,7 @@ with NumpySocket() as s:
                 
                 image_capt_flag = 0                
                 
-                if i%5!=0 or i==0:    
+                if i%4!=0 or i==0:    
                     obj_result = evaluation.get_distance_values_from_objects(frame_left, frame_right)
                     obj_sentence = evaluation.result_to_sentence(obj_result)
                     sentence_list = obj_sentence.split(". ")
@@ -47,14 +47,19 @@ with NumpySocket() as s:
                         obj_sentence = ". ".join(sentence_list[:3])
                         image_capt_flag = 1
                     if obj_sentence != "":
+                        print("------------------------------")
+                        print(obj_sentence)
+                        print("------------------------------")
                         data = {"text": obj_sentence}
                         response = requests.post(url, json=data)
                         i+=1
                                           
-                elif (i%5==0 and i!=0) or image_capt_flag==1:
+                elif (i%4==0 and i!=0) or image_capt_flag==1:
                     try:
                         capt_result = evaluation.image_captioning_result(frame_left)[0]['generated_text']
+                        print("------------------------------")
                         print(capt_result)
+                        print("------------------------------")
                         data = {"text": capt_result}
                         response = requests.post(url, json=data)
                         if image_capt_flag==0:
