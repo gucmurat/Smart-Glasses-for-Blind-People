@@ -46,7 +46,10 @@ def initialize_models():
     
     model_type = "MiDaS_small" 
     model_midas = torch.hub.load("intel-isl/MiDaS", model_type)
-    device_midas = torch.device("mps") if torch.cuda.is_available() else torch.device("cpu")
+    try:
+        device_midas = torch.device("mps") 
+    except:
+        device_midas = torch.device("cpu")
     model_midas.to(device_midas)
     model_midas.eval()
     midas_transforms = torch.hub.load("intel-isl/MiDaS", "transforms")
@@ -60,12 +63,12 @@ def initialize_models():
 def detected_labels_and_boxes_result(model, image, model_type):
     results = None
     if model_type=="wotr":
-        results = model.predict(image, classes=wotr_class_pruned_indexes)
+        results = model.predict(image, classes=wotr_class_pruned_indexes, device='mps')
         result = results[0]
     elif model_type=="yolo":
-        results = model.predict(image)
+        results = model.predict(image, device='mps')
         result = results[0]
-    return {'names': result.names, "classes": result.boxes.cls, "boxes": result.boxes.xyxy, "confs": result.boxes.conf}
+    return {'names': result.names, "classes": result.boxes.cls.cpu(), "boxes": result.boxes.xyxy.cpu(), "confs": result.boxes.conf.cpu()}
 
 def depth_map_result(image):
     if isinstance(image, str):
@@ -148,7 +151,7 @@ def stereo_vision_distance_result(image_left, image_right, labels_boxes_json_lef
             obj.append(obj_to_sha256(obj))
             dist_direction_class_list.append(obj)
         # eliminate negative distance measurements
-        if d<0:
+        if d<10 or d>400:
             continue
         # eliminate undetected objects that have distance higher than 100 cm, lower than 20
         if c==80 and (d>150 or d<20):
@@ -192,7 +195,7 @@ def get_model_output_from_frame(model_method, frame ,show=False, printable=False
 def match_and_eliminate_detection_results(labels_boxes_json_left, labels_boxes_json_right):
     class_to_tensors = []
     
-    threshold = 0.60
+    threshold = 0.40
     
     left_classes = labels_boxes_json_left["classes"].numpy()
     right_classes = labels_boxes_json_right["classes"].numpy()
