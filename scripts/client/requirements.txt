@@ -1,0 +1,7 @@
+opencv-python
+numpy
+numpysocket
+fastapi
+uvicorn
+timm
+gTTS

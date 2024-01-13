@@ -31,14 +31,14 @@ with NumpySocket() as s:
                 frame_right = array_of_frames[0]
                 frame_left = array_of_frames[1]
                 #################################################
-                cv2.imshow("Camera 1", frame_right)
-                cv2.imshow("Camera 2", frame_left)
+                #cv2.imshow("Camera 1", frame_right)
+                #cv2.imshow("Camera 2", frame_left)
                 
                 key = cv2.waitKey(1) & 0xFF
                 
                 image_capt_flag = 0                
                 
-                if i%4!=0 or i==0:    
+                if i%5!=0 or i==0:    
                     obj_result = evaluation.get_distance_values_from_objects(frame_left, frame_right)
                     obj_sentence = evaluation.result_to_sentence(obj_result)
                     sentence_list = obj_sentence.split(". ")
@@ -47,19 +47,14 @@ with NumpySocket() as s:
                         obj_sentence = ". ".join(sentence_list[:3])
                         image_capt_flag = 1
                     if obj_sentence != "":
-                        print("------------------------------")
-                        print(obj_sentence)
-                        print("------------------------------")
                         data = {"text": obj_sentence}
                         response = requests.post(url, json=data)
                         i+=1
                                           
-                elif (i%4==0 and i!=0) or image_capt_flag==1:
+                elif (i%5==0 and i!=0) or image_capt_flag==1:
                     try:
                         capt_result = evaluation.image_captioning_result(frame_left)[0]['generated_text']
-                        print("------------------------------")
                         print(capt_result)
-                        print("------------------------------")
                         data = {"text": capt_result}
                         response = requests.post(url, json=data)
                         if image_capt_flag==0:

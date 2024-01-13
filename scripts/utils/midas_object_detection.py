@@ -84,8 +84,11 @@ def calculate_intersection_over_union(box1, box2):
     intersection_area = max(0, x2_inter - x1_inter) * max(0, y2_inter - y1_inter)
     area_box1 = (box1[2] - box1[0]) * (box1[3] - box1[1])
     area_box2 = (box2[2] - box2[0]) * (box2[3] - box2[1])
-    iou1 = intersection_area / float(area_box1)
-    iou2 = intersection_area / float(area_box2)
+    try:
+        iou1 = intersection_area / float(area_box1)
+        iou2 = intersection_area / float(area_box2)
+    except:
+        return True
     if iou1 > 0.6 or iou2 > 0.6:
         return True
     else:
